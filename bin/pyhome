@@ -44,7 +44,7 @@ def clone(args):
     # Make sure repo dir exists
     if not os.path.exists(settings.PYHOME_REPO):
         os.makedirs(settings.PYHOME_REPO)
-    git.clone(repo_dir, args.url, args.name)
+    git.clone(settings.PYHOME_REPO, args.url, args.name)
 
 def link(args):
     # What are we working with?
