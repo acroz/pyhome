@@ -1,10 +1,10 @@
-# pyHome
+# pyhome
 
 A simple python utility replicating the basic functionality of the `homesick`
 ruby utility, which itself provides a simple interface for managing dotfiles
 via git repos.
 
-This tool was born out of frustration at attempting to yuse ruby gems on
+This tool was born out of frustration at attempting to use ruby gems on
 systems where I do not have administrative rights. On such systems, which are
 often not the bleeding edge of ruby version, getting gems to work has proved
 extremely difficult. Installation of a new ruby version with associated rubygem
