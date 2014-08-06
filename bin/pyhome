@@ -1,0 +1,121 @@
+#!/usr/bin/env python
+
+"""
+pyhome
+
+A simple, standard library-only python replacement for the homesick ruby gem.
+"""
+
+import argparse
+import os
+from glob import glob
+from pyhome import settings, git, symlink
+
+def repo_list():
+    """
+    Return list of all git repos in repodir
+    """
+    
+    # Assuming all git repos contain a .git folder
+    pattern = os.path.join(settings.PYHOME_REPO, '*', '.git')
+    
+    # Do some extra checks
+    repos = []
+    for path in glob(pattern):
+        # .git should be a folder
+        if not os.path.isdir(path):
+            continue
+        repo_root = os.path.dirname(path)
+        repos.append(os.path.basename(repo_root))
+
+    return repos
+
+
+def list(args):
+    """
+    List all existing repos
+    """
+    print('Current pyhome repos:')
+    for repo in repo_list():
+        print('    {}'.format(repo))
+    
+
+def clone(args):
+    # Make sure repo dir exists
+    if not os.path.exists(settings.PYHOME_REPO):
+        os.makedirs(settings.PYHOME_REPO)
+    git.clone(repo_dir, args.url, args.name)
+
+def link(args):
+    # What are we working with?
+    if args.all:
+        repos = repo_list()
+    else:
+        repos = args.repos
+
+    if len(repos):
+        print('No repo specified')
+
+    for r in repos:
+        symlink.repo_create_symlinks(r)
+
+def unlink(args):
+    # What are we working with?
+    if args.all:
+        repos = repo_list()
+    else:
+        repos = args.repos
+
+    if len(repos):
+        print('No repo specified')
+
+    for r in repos:
+        symlink.repo_clear_symlinks(r)
+
+if __name__ == '__main__':
+
+    # Define the CLI
+    
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers()
+
+    # Lisat existing repos
+    list_parser = subparsers.add_parser('list',
+                                        help='List existing repos')
+    list_parser.set_defaults(func=list)
+   
+    # Clone a repo
+    clone_parser = subparsers.add_parser('clone',
+                                         help='Clone a git repo containing your dotfiles')
+    clone_parser.set_defaults(func=clone)
+    clone_parser.add_argument('url',
+                              help='URL of git repo to clone')
+    clone_parser.add_argument('name',
+                              nargs='?',
+                              help='Optionally specify name of cloned repo')
+    
+    # Set up symlinks
+    link_parser = subparsers.add_parser('link',
+                                        help='Create symlinks for dotfiles')
+    link_parser.set_defaults(func=link)
+    link_parser.add_argument('repos',
+                             nargs='*',
+                             help='Repos to link')
+    link_parser.add_argument('--all',
+                             action='store_true',
+                             help='Link all repos')
+
+    # Clear symlinks
+    link_parser = subparsers.add_parser('unlink',
+                                        help='Remove symlinks for dotfiles')
+    link_parser.set_defaults(func=unlink)
+    link_parser.add_argument('repos',
+                             nargs='*',
+                             help='Repos to unlink')
+    link_parser.add_argument('--all',
+                             action='store_true',
+                             help='Unlink all repos')
+
+    args = parser.parse_args()
+    args.func(args)
+    
