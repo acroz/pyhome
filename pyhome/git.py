@@ -21,12 +21,13 @@ def git(*args):
     
     # Attempt command and handle errors
     try:
-        check_output(cmd, stderr=STDOUT)
+        output = check_output(cmd, stderr=STDOUT)
     except OSError:
         raise GitException('git command not found')
     except CalledProcessError as e:
         raise GitException(e.output.strip())
 
+    print(output.strip())
 
 def clone(pyhome_dir, url, name=None):
     """
