@@ -44,3 +44,11 @@ def clone(pyhome_dir, url, name=None):
             assert len(name) > 0, GitException('Specified repo name invalid')
 
             git('clone', url, name)
+
+def submodule_update(repo_root):
+    """
+    Update all submodules in a repo.
+    """
+
+    with dircontext(repo_root):
+        git('submodule', 'update', '--init')
