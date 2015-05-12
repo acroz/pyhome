@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 """
 pyhome
@@ -53,7 +53,7 @@ def link(args):
     else:
         repos = args.repos
 
-    if len(repos):
+    if len(repos) == 0:
         print('No repo specified')
 
     for r in repos:
@@ -66,11 +66,24 @@ def unlink(args):
     else:
         repos = args.repos
 
-    if len(repos):
+    if len(repos) == 0:
         print('No repo specified')
 
     for r in repos:
         symlink.repo_clear_symlinks(r)
+
+def module_update(args):
+    # What are we working with?
+    if args.all:
+        repos = repo_list()
+    else:
+        repos = args.repos
+
+    if len(repos) == 0:
+        print('No repo specified')
+
+    for r in repos:
+        git.submodule_update(os.path.join(settings.PYHOME_REPO, r))
 
 if __name__ == '__main__':
 
@@ -115,6 +128,17 @@ if __name__ == '__main__':
     link_parser.add_argument('--all',
                              action='store_true',
                              help='Unlink all repos')
+
+    # Update submodules
+    link_parser = subparsers.add_parser('modupdate',
+                                        help='Update submodules')
+    link_parser.set_defaults(func=module_update)
+    link_parser.add_argument('repos',
+                             nargs='*',
+                             help='Repos to update')
+    link_parser.add_argument('--all',
+                             action='store_true',
+                             help='Update all repos')
 
     args = parser.parse_args()
     args.func(args)
