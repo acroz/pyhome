@@ -1,12 +1,15 @@
 """
-pyhome.git
-
 Provides functional interface to git by running shell commands through the
 subprocess module.
 """
 
+import os
+import locale
 from subprocess import check_output, STDOUT, CalledProcessError
 from pyhome.dircontext import dircontext
+
+# Determine system encoding from locale
+SYSENC = locale.getpreferredencoding()
 
 class GitException(Exception):
     pass
@@ -22,33 +25,50 @@ def git(*args):
     # Attempt command and handle errors
     try:
         output = check_output(cmd, stderr=STDOUT)
-    except OSError:
+    except OSError as e:
         raise GitException('git command not found')
     except CalledProcessError as e:
-        raise GitException(e.output.strip())
+        raise GitException(e.output.decode(SYSENC).strip())
+    finally:
+        pass
+    
+    out = output.decode(SYSENC).strip()
+    if len(out) > 0:
+        print(out)
 
-    print(output.strip())
+def reponame(url, name=None):
+    """
+    Determine a repo's cloned name from its URL.
+    """
+    if name is not None:
+        return name
+    name = os.path.basename(url)
+    if name.endswith('.git'):
+        name = name[:-4]
+    return name
 
-def clone(pyhome_dir, url, name=None):
+def clone(parent, url, name=None, submodules=True):
     """
     Clone a git repo.
     """
 
-    with dircontext(pyhome_dir):
+    subcmd = ['clone', url]
+    
+    if name is not None:
+        subcmd.append(name)
 
-        if name is None:
-            git('clone', url)
+    with dircontext(parent):
+        git(*subcmd)
 
-        else:
-            assert isinstance(name, str), GitException('Specified repo name invalid')
-            assert len(name) > 0, GitException('Specified repo name invalid')
+        if submodules:
+            with dircontext(reponame(url, name)):
+                git('submodule', 'update', '--init')
 
-            git('clone', url, name)
-
-def submodule_update(repo_root):
+def pull(repo, submodules=True):
     """
-    Update all submodules in a repo.
+    Update a repo.
     """
-
-    with dircontext(repo_root):
-        git('submodule', 'update', '--init')
+    with dircontext(repo):
+        git('pull')
+        if submodules:
+            git('submodule', 'update', '--init')

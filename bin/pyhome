@@ -1,13 +1,12 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 """
-pyhome
-
 A simple, standard library-only python replacement for the homesick ruby gem.
 """
 
 import argparse
 import os
+import shutil
 from glob import glob
 from pyhome import settings, git, symlink
 
@@ -33,7 +32,7 @@ def repo_list():
 
 def list(args):
     """
-    List all existing repos
+    List all existing repos in your pyhome.
     """
     print('Current pyhome repos:')
     for repo in repo_list():
@@ -41,105 +40,153 @@ def list(args):
     
 
 def clone(args):
+    """
+    Clone a new repo to your pyhome.
+    """
+
     # Make sure repo dir exists
     if not os.path.exists(settings.PYHOME_REPO):
         os.makedirs(settings.PYHOME_REPO)
-    git.clone(settings.PYHOME_REPO, args.url, args.name)
+    
+    print('Cloning repo from {} ...'.format(args.url))
+    git.clone(settings.PYHOME_REPO, args.url, args.name, args.submodules)
+
+
+def remove(args):
+    """
+    Remove a repo from your pyhome.
+    """
+
+    repopath = os.path.join(settings.PYHOME_REPO, args.repo)
+
+    if not os.path.exists(repopath):
+        print('No repo "{}" found.'.format(args.repo))
+        # This is an error
+        sys.exit(1)
+
+    if not args.force:
+        # Make sure of no accidental deletions
+        tpl = 'Really remove "{}"? Run again with "-f" to confirm.'
+        print(tpl.format(repopath))
+
+    else:
+        # Actually delete the thing.
+        print('Removing repo {} ...'.format(repopath))
+        print(' - Unlinking ...')
+        symlink.repo_clear_symlinks(repopath)
+        print(' - Removing directory ...')
+        shutil.rmtree(repopath)
+
+
+def pull(args):
+    """
+    Pull a repo and optionally update its submodules.
+    """
+    for r in repos_from_arguments(args):
+        print('\nPulling repo in {} ...'.format(r))
+        git.pull(r, args.submodules)
+
 
 def link(args):
-    # What are we working with?
-    if args.all:
-        repos = repo_list()
-    else:
-        repos = args.repos
-
-    if len(repos) == 0:
-        print('No repo specified')
-
-    for r in repos:
+    """
+    Generate links for this repo in your $HOME folder.
+    """
+    for r in repos_from_arguments(args):
+        print('\nCreating symlinks for repo {} ...'.format(r))
         symlink.repo_create_symlinks(r)
 
+
 def unlink(args):
-    # What are we working with?
-    if args.all:
-        repos = repo_list()
-    else:
-        repos = args.repos
-
-    if len(repos) == 0:
-        print('No repo specified')
-
-    for r in repos:
+    """
+    Remove links for this repo in your $HOME folder.
+    """
+    for r in repos_from_arguments(args):
+        print('\nRemoving symlinks for repo {} ...'.format(r))
         symlink.repo_clear_symlinks(r)
 
-def module_update(args):
-    # What are we working with?
+
+def parser_add_repo_options(parser):
+    """
+    Add some standard options for selecting repos to a parser.
+    """
+    parser.add_argument('repos', nargs='*', help='repos to link')
+    parser.add_argument('-a', '--all', action='store_true',
+                        help='link all repos')
+
+
+def repos_from_arguments(args):
+    """
+    Build a list of repos rom the arguments defined in parser_add_repo_options.
+    """
+    
     if args.all:
         repos = repo_list()
+
+        if len(repos) == 0:
+            print('No repos currently exist')
+
     else:
         repos = args.repos
 
-    if len(repos) == 0:
-        print('No repo specified')
+        if len(repos) == 0:
+            print('No repos specified on command line')
+    
+    return [os.path.join(settings.PYHOME_REPO, r) for r in repos]
 
-    for r in repos:
-        git.submodule_update(os.path.join(settings.PYHOME_REPO, r))
 
 if __name__ == '__main__':
 
     # Define the CLI
-    
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers()
 
-    # Lisat existing repos
-    list_parser = subparsers.add_parser('list',
-                                        help='List existing repos')
-    list_parser.set_defaults(func=list)
+    # Fix for issue #9253
+    # http://bugs.python.org/issue9253#msg186387
+    subparsers.required = True
+    subparsers.dest = 'subcommand'
+
+    def add(func, aliases=[]):
+        sub = subparsers.add_parser(func.__name__, help=func.__doc__,
+                                    description=func.__doc__, aliases=aliases)
+        sub.set_defaults(func=func)
+        return sub
+
+    # List existing repos
+    list_parser = add(list)
    
     # Clone a repo
-    clone_parser = subparsers.add_parser('clone',
-                                         help='Clone a git repo containing your dotfiles')
-    clone_parser.set_defaults(func=clone)
+    clone_parser = add(clone)
     clone_parser.add_argument('url',
                               help='URL of git repo to clone')
     clone_parser.add_argument('name',
                               nargs='?',
-                              help='Optionally specify name of cloned repo')
+                              help='optionally specify name of cloned repo')
+    clone_parser.add_argument('--no-submodules',
+                              action='store_false', dest='submodules',
+                              help='do not update submodules')
+
+    # Remove a repo
+    rm_parser = add(remove, aliases=['rm'])
+    rm_parser.add_argument('repo',
+                           help='name of the repo to remove')
+    rm_parser.add_argument('-f', '--force',
+                           action='store_true',
+                           help='confirm the removal of the repo')
+
+    # Pull a repo/repos
+    pull_parser = add(pull)
+    parser_add_repo_options(pull_parser)
+    pull_parser.add_argument('--no-submodules',
+                             action='store_false', dest='submodules',
+                             help='do not update submodules')
     
     # Set up symlinks
-    link_parser = subparsers.add_parser('link',
-                                        help='Create symlinks for dotfiles')
-    link_parser.set_defaults(func=link)
-    link_parser.add_argument('repos',
-                             nargs='*',
-                             help='Repos to link')
-    link_parser.add_argument('--all',
-                             action='store_true',
-                             help='Link all repos')
+    link_parser = add(link)
+    parser_add_repo_options(link_parser)
 
     # Clear symlinks
-    link_parser = subparsers.add_parser('unlink',
-                                        help='Remove symlinks for dotfiles')
-    link_parser.set_defaults(func=unlink)
-    link_parser.add_argument('repos',
-                             nargs='*',
-                             help='Repos to unlink')
-    link_parser.add_argument('--all',
-                             action='store_true',
-                             help='Unlink all repos')
-
-    # Update submodules
-    link_parser = subparsers.add_parser('modupdate',
-                                        help='Update submodules')
-    link_parser.set_defaults(func=module_update)
-    link_parser.add_argument('repos',
-                             nargs='*',
-                             help='Repos to update')
-    link_parser.add_argument('--all',
-                             action='store_true',
-                             help='Update all repos')
+    unlink_parser = add(unlink)
+    parser_add_repo_options(unlink_parser)
 
     args = parser.parse_args()
     args.func(args)
-    

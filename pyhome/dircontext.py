@@ -1,6 +1,4 @@
 """
-pyhome.dircontext
-
 Directory context manager for the safe execution of a function with a temporary
 changed working directory.
 """

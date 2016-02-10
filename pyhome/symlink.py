@@ -1,18 +1,20 @@
 """
-pyhome.symlink
-
 Symbolic link creation and handling.
 """
 
 import os
 import shutil
 from pyhome import settings
+from six.moves import input # Fix 2/3 compat issues
 
-
+# Files to search for that may contain subdir definitions
+SUBDIR_FILENAMES = ['.subdir',
+                    '.pyhome_subdir',
+                    '.homesick_subdir']
 
 def overwrite_prompt():
-    input = raw_input('Overwrite [yn]: ')
-    clean = input.strip().lower()
+    userinput = input('Overwrite [yn]: ')
+    clean = userinput.strip().lower()
     if clean == 'y':
         return True
     elif clean == 'n':
@@ -21,8 +23,10 @@ def overwrite_prompt():
         print('Invalid input: "{}"'.format(input))
         return overwrite_prompt()
 
-
 def create_single_symlink(linkpath, targetpath):
+    """
+    Create a symbolic link, printing status messages and prompting if needed.
+    """
 
     create = True
 
@@ -72,6 +76,9 @@ def create_single_symlink(linkpath, targetpath):
 
 
 def clear_single_symlink(linkpath, targetpath):
+    """
+    Remove a symbolic link, printing status messages and prompting if needed.
+    """
 
     if not os.path.exists(linkpath):
         # Skip quietly
@@ -92,24 +99,105 @@ def clear_single_symlink(linkpath, targetpath):
         os.unlink(linkpath)
         print('Unlinked: {} -> {}'.format(linkpath, targetpath))
 
+def splitall(path):
+    """
+    Split a path into its constituent parts.
+
+    From the Python Cookbook: https://goo.gl/ooy0sx
+    """
+
+    allparts = []
+
+    while 1:
+        parts = os.path.split(path)
+
+        if parts[0] == path:  # sentinel for absolute paths
+            allparts.insert(0, parts[0])
+            break
+
+        elif parts[1] == path: # sentinel for relative paths
+            allparts.insert(0, parts[1])
+            break
+
+        else:
+            path = parts[0]
+            allparts.insert(0, parts[1])
+
+    return allparts
+
+def linkable_files(directory, subdirs=[]):
+    """
+    Generate a list of linkable files in the directory, accounting for subdir
+    definitions.
+    """
+
+    # Get the first directory of each subdir
+    subdir_top = [splitall(sd)[0] for sd in subdirs]
+
+    for file in os.listdir(directory):
+
+        if file in subdir_top:
+
+            # Get any children
+            children = []
+            for top, sd in zip(subdir_top, subdirs):
+                if file == top:
+                    remaining = splitall(sd)[1:]
+                    if len(remaining) > 0:
+                        children.append(os.path.join(*remaining))
+
+            for subfile in linkable_files(os.path.join(directory, file),
+                                          children):
+                yield os.path.join(file, subfile)
+
+        else:
+            yield file
+
+
+def load_subdirs(repo):
+    """
+    Load any subdir definitions for this repo.
+    """
+
+    subdirs = []
+
+    # Iterate over all possible subdir files
+    for filename in SUBDIR_FILENAMES:
+        fullpath = os.path.join(repo, filename)
+        if os.path.exists(fullpath):
+
+            # Load the subdirs
+            with open(fullpath) as fp:
+                for line in fp:
+                    line = line.strip()
+                    if len(line) > 0:
+                        subdirs.append(line)
+
+    return subdirs
+
+
+def repo_symlink_map(repo, function):
+    """
+    Map a function to all linkable file (from, to) pairs in this repo.
+    """
+
+    home = os.path.join(repo, 'home')
+
+    for fname in linkable_files(home, load_subdirs(repo)):
+        linkpath   = os.path.join(settings.HOME, fname)
+        targetpath = os.path.join(home, fname)
+        function(linkpath, targetpath)
+
 
 def repo_create_symlinks(repo):
-
-    print('Creating symlinks for repo {}'.format(repo))
-    repo_home = os.path.join(settings.PYHOME_REPO, repo, 'home')
-
-    for file in os.listdir(repo_home):
-        linkpath   = os.path.join(settings.HOME, file)
-        targetpath = os.path.join(repo_home, file)
-        create_single_symlink(linkpath, targetpath)
+    """
+    Generate symbolic links for this repo.
+    """
+    repo_symlink_map(repo, create_single_symlink)
 
 
 def repo_clear_symlinks(repo):
-
-    print('Removing symlinks for repo {}'.format(repo))
-    repo_home = os.path.join(settings.PYHOME_REPO, repo, 'home')
-
-    for file in os.listdir(repo_home):
-        linkpath   = os.path.join(settings.HOME, file)
-        targetpath = os.path.join(repo_home, file)
-        clear_single_symlink(linkpath, targetpath)
+    """
+    Remove symbolic links for this repo.
+    """
+    repo_symlink_map(repo, clear_single_symlink)
