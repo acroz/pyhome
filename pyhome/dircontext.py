@@ -6,22 +6,22 @@ changed working directory.
 """
 
 import os
+from contextlib import contextmanager
 
-class dircontext(object):
+@contextmanager
+def dircontext(directory):
     """
-    Simple context manager for the execution of a code block inside another
-    directory.
+    Context manager for the execution of a code block inside another directory.
     """
 
-    def __init__(self, dir):
-        """ Store current and temp directories """
-        self._orig_dir = os.getcwd()
-        self._temp_dir = os.path.abspath(dir)
+    # Store the current directory
+    orig_dir = os.getcwd()
 
-    def __enter__(self):
-        """ Change to temporary directory """
-        os.chdir(self._temp_dir)
+    try:
+        # Change the working directory
+        os.chdir(directory)
+        yield
 
-    def __exit__(self, *args, **kwargs):
-        """ Reset directory to original dir """
-        os.chdir(self._orig_dir)
+    finally:
+        # Resotre the original directory
+        os.chdir(orig_dir)
