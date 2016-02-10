@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Run pyhome without needing to modify dotfiles
+
+# Get directory of script
+# Source: http://stackoverflow.com/a/246128/1665719
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Get parent directory
+PARENT="$( dirname $DIR )"
+
+# Run with appropriately modified PATH and PYTHONPATH
+PATH=$PATH:$DIR PYTHONPATH=$PYTHONPATH:$PARENT pyhome "$@"
