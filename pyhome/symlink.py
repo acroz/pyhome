@@ -5,7 +5,12 @@ Symbolic link creation and handling.
 import os
 import shutil
 from pyhome import settings
-from six.moves import input # Fix 2/3 compat issues
+
+# Python 2/3 compatability
+try:
+    input = raw_input
+except NameError:
+    pass
 
 # Files to search for that may contain subdir definitions
 SUBDIR_FILENAMES = ['.subdir',

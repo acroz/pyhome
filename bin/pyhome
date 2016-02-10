@@ -145,9 +145,9 @@ if __name__ == '__main__':
     subparsers.required = True
     subparsers.dest = 'subcommand'
 
-    def add(func, aliases=[]):
+    def add(func):
         sub = subparsers.add_parser(func.__name__, help=func.__doc__,
-                                    description=func.__doc__, aliases=aliases)
+                                    description=func.__doc__)
         sub.set_defaults(func=func)
         return sub
 
@@ -166,7 +166,7 @@ if __name__ == '__main__':
                               help='do not update submodules')
 
     # Remove a repo
-    rm_parser = add(remove, aliases=['rm'])
+    rm_parser = add(remove)
     rm_parser.add_argument('repo',
                            help='name of the repo to remove')
     rm_parser.add_argument('-f', '--force',
