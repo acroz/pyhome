@@ -1,13 +1,12 @@
-#!/usr/bin/env python
 
-"""
-A simple, standard library-only python replacement for the homesick ruby gem.
-"""
+from __future__ import print_function
 
-import argparse
 import os
+import sys
 import shutil
+import argparse
 from glob import glob
+
 from pyhome import settings, git, symlink
 
 def repo_list():
@@ -27,13 +26,14 @@ def repo_list():
         repo_root = os.path.dirname(path)
         repos.append(os.path.basename(repo_root))
 
-    return repos
+    return sorted(repos)
 
 
 def list(args):
     """
-    List all existing repos in your pyhome.
+    List all existing repos in your pyhome
     """
+
     print('Current pyhome repos:')
     for repo in repo_list():
         print('    {}'.format(repo))
@@ -41,7 +41,7 @@ def list(args):
 
 def clone(args):
     """
-    Clone a new repo to your pyhome.
+    Clone a new repo to your pyhome
     """
 
     # Make sure repo dir exists
@@ -54,7 +54,7 @@ def clone(args):
 
 def remove(args):
     """
-    Remove a repo from your pyhome.
+    Remove a repo from your pyhome
     """
 
     repopath = os.path.join(settings.PYHOME_REPO, args.repo)
@@ -70,7 +70,7 @@ def remove(args):
         print(tpl.format(repopath))
 
     else:
-        # Actually delete the thing.
+        # Actually delete the thing
         print('Removing repo {} ...'.format(repopath))
         print(' - Unlinking ...')
         symlink.repo_clear_symlinks(repopath)
@@ -80,8 +80,9 @@ def remove(args):
 
 def pull(args):
     """
-    Pull a repo and optionally update its submodules.
+    Pull a repo and optionally update its submodules
     """
+
     for r in repos_from_arguments(args):
         print('\nPulling repo in {} ...'.format(r))
         git.pull(r, args.submodules)
@@ -89,8 +90,9 @@ def pull(args):
 
 def link(args):
     """
-    Generate links for this repo in your $HOME folder.
+    Generate links for this repo in your $HOME folder
     """
+
     for r in repos_from_arguments(args):
         print('\nCreating symlinks for repo {} ...'.format(r))
         symlink.repo_create_symlinks(r)
@@ -98,8 +100,9 @@ def link(args):
 
 def unlink(args):
     """
-    Remove links for this repo in your $HOME folder.
+    Remove links for this repo in your $HOME folder
     """
+
     for r in repos_from_arguments(args):
         print('\nRemoving symlinks for repo {} ...'.format(r))
         symlink.repo_clear_symlinks(r)
@@ -107,8 +110,9 @@ def unlink(args):
 
 def parser_add_repo_options(parser):
     """
-    Add some standard options for selecting repos to a parser.
+    Add some standard options for selecting repos to a parser
     """
+
     parser.add_argument('repos', nargs='*', help='repos to link')
     parser.add_argument('-a', '--all', action='store_true',
                         help='link all repos')
@@ -116,28 +120,34 @@ def parser_add_repo_options(parser):
 
 def repos_from_arguments(args):
     """
-    Build a list of repos rom the arguments defined in parser_add_repo_options.
+    Build a list of repos rom the arguments defined in parser_add_repo_options
     """
     
     if args.all:
         repos = repo_list()
 
         if len(repos) == 0:
-            print('No repos currently exist')
+            print('No repos have yet been cloned to your pyhome')
+            sys.exit(1)
 
     else:
         repos = args.repos
 
         if len(repos) == 0:
-            print('No repos specified on command line')
+            print('Either specify repos on the command line or use --all')
+            sys.exit(1)
     
     return [os.path.join(settings.PYHOME_REPO, r) for r in repos]
 
 
-if __name__ == '__main__':
+def main():
+    """
+    Execute the main command line interface.
+    """
 
     # Define the CLI
-    parser = argparse.ArgumentParser(description=__doc__)
+    description = 'A dotfile management and synchronisation tool.'
+    parser = argparse.ArgumentParser(description=description)
     subparsers = parser.add_subparsers()
 
     # Fix for issue #9253
@@ -190,3 +200,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.func(args)
+
+
+# Enable script execution with 'python -m pyhome'
+if __name__ == '__main__':
+    main()

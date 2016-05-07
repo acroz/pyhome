@@ -2,6 +2,8 @@
 Symbolic link creation and handling.
 """
 
+from future import print_function
+
 import os
 import shutil
 from pyhome import settings
