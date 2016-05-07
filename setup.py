@@ -3,9 +3,9 @@ from setuptools import setup, find_packages
 
 setup(
     name='pyhome',
-    version='0.1.0',
+    version='0.1.1',
     description='Dotfile management and synchronisation tool',
-    long_description=open('README.md').read(),
+    long_description=open('README.rst').read(),
     url='https://github.com/acroz/pyhome',
     author='Andrew Crozier',
     author_email='wacrozier@gmail.com',

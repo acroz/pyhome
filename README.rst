@@ -1,9 +1,16 @@
-# pyhome
+pyhome
+======
 
 A dotfile management and synchronisation tool.
 
+.. image:: http://img.shields.io/pypi/v/pyhome.svg
+   :target: https://pypi.python.org/pypi/pyhome
+
+.. image:: http://img.shields.io/badge/license-MIT-green.svg
+   :target: https://github.com/getnikola/nikola/blob/master/LICENSE.txt
+
 This is a simple python utility with similar functionality to the functionality
-of the `homesick` ruby utility, providing a simple interface for managing
+of the ``homesick`` ruby utility, providing a simple interface for managing
 dotfiles via git repositories.
 
 This tool was born out of frustration at attempting to use ruby gems on HPC
@@ -12,15 +19,17 @@ often not the bleeding edge of ruby version, getting gems to work has proved
 extremely difficult. Installation of a new ruby version with associated rubygem
 was possible sometimes, but not often enough.
 
-## Aims
+Aims
+----
 
-This tool replicates the most basic functionalities of `homesick`, namely
+This tool replicates the most basic functionalities of ``homesick``, namely
 
 1. Cloning git repositories to the appropriate location
 2. Pulling repositories
 3. Automatic creation of symbolic links to dotfiles in repos
 
-## Development
+Development
+-----------
 
 Code is written to be compatible with both Python 2.6+ and 3.x, and
 deliberately avoids using any modules outside the standard library, so that it
