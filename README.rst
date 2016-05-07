@@ -7,7 +7,7 @@ A dotfile management and synchronisation tool.
    :target: https://pypi.python.org/pypi/pyhome
 
 .. image:: http://img.shields.io/badge/license-MIT-green.svg
-   :target: https://github.com/getnikola/nikola/blob/master/LICENSE.txt
+   :target: https://github.com/acroz/pyhome/blob/master/LICENSE
 
 This is a simple python utility with similar functionality to the functionality
 of the ``homesick`` ruby utility, providing a simple interface for managing
