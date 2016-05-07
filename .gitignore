@@ -1,2 +1,10 @@
+# Python auto generated files
 *.pyc
+
+# Editor swapfiles
 .*.swp
+
+# Setuptools auto generated directories
+/build
+/dist
+*.egg-info
