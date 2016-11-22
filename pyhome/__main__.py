@@ -128,6 +128,7 @@ def repos_from_arguments(args):
 
         if len(repos) == 0:
             print('No repos have yet been cloned to your pyhome')
+            print('    Repo dir: {}'.format(settings.PYHOME_REPOS))
             sys.exit(1)
 
     else:
