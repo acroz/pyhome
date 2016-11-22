@@ -19,6 +19,7 @@ SUBDIR_FILENAMES = ['.subdir',
                     '.pyhome_subdir',
                     '.homesick_subdir']
 
+
 def overwrite_prompt():
     userinput = input('Overwrite [yn]: ')
     clean = userinput.strip().lower()
@@ -30,6 +31,7 @@ def overwrite_prompt():
         print('Invalid input: "{}"'.format(input))
         return overwrite_prompt()
 
+
 def create_single_symlink(linkpath, targetpath):
     """
     Create a symbolic link, printing status messages and prompting if needed.
@@ -38,13 +40,14 @@ def create_single_symlink(linkpath, targetpath):
     create = True
 
     # Check current file status
-    if os.path.exists(linkpath):
+    if os.path.exists(linkpath) or os.path.islink(linkpath):
 
         # Is it a link already
         if os.path.islink(linkpath):
 
             # Does it point to the right place?
-            if os.path.samefile(linkpath, targetpath):
+            if (os.path.exists(linkpath)
+                    and os.path.samefile(linkpath, targetpath)):
                 print('Unchanged: {} -> {}'.format(linkpath, targetpath))
                 return
 
@@ -95,7 +98,7 @@ def clear_single_symlink(linkpath, targetpath):
         print('Skipping: {} -> {}'.format(linkpath, targetpath))
         print('          {}'.format(linkpath))
         print('              is not a link')
-    
+
     elif not os.path.samefile(linkpath, targetpath):
         print('Skipping: {} -> {}'.format(linkpath, targetpath))
         print('          {}'.format(linkpath))
@@ -105,6 +108,7 @@ def clear_single_symlink(linkpath, targetpath):
     else:
         os.unlink(linkpath)
         print('Unlinked: {} -> {}'.format(linkpath, targetpath))
+
 
 def splitall(path):
     """
@@ -122,7 +126,7 @@ def splitall(path):
             allparts.insert(0, parts[0])
             break
 
-        elif parts[1] == path: # sentinel for relative paths
+        elif parts[1] == path:  # sentinel for relative paths
             allparts.insert(0, parts[1])
             break
 
@@ -131,6 +135,7 @@ def splitall(path):
             allparts.insert(0, parts[1])
 
     return allparts
+
 
 def linkable_files(directory, subdirs=[]):
     """
@@ -191,7 +196,7 @@ def repo_symlink_map(repo, function):
     home = os.path.join(repo, 'home')
 
     for fname in linkable_files(home, load_subdirs(repo)):
-        linkpath   = os.path.join(settings.HOME, fname)
+        linkpath = os.path.join(settings.HOME, fname)
         targetpath = os.path.join(home, fname)
         function(linkpath, targetpath)
 
