@@ -1,4 +1,3 @@
-
 from __future__ import print_function
 
 import os
@@ -9,14 +8,15 @@ from glob import glob
 
 from pyhome import settings, git, symlink
 
+
 def repo_list():
     """
     Return list of all git repos in repodir
     """
-    
+
     # Assuming all git repos contain a .git folder
     pattern = os.path.join(settings.PYHOME_REPO, '*', '.git')
-    
+
     # Do some extra checks
     repos = []
     for path in glob(pattern):
@@ -37,7 +37,7 @@ def list(args):
     print('Current pyhome repos:')
     for repo in repo_list():
         print('    {}'.format(repo))
-    
+
 
 def clone(args):
     """
@@ -47,7 +47,7 @@ def clone(args):
     # Make sure repo dir exists
     if not os.path.exists(settings.PYHOME_REPO):
         os.makedirs(settings.PYHOME_REPO)
-    
+
     print('Cloning repo from {} ...'.format(args.url))
     git.clone(settings.PYHOME_REPO, args.url, args.name, args.submodules)
 
@@ -122,7 +122,7 @@ def repos_from_arguments(args):
     """
     Build a list of repos rom the arguments defined in parser_add_repo_options
     """
-    
+
     if args.all:
         repos = repo_list()
 
@@ -136,7 +136,7 @@ def repos_from_arguments(args):
         if len(repos) == 0:
             print('Either specify repos on the command line or use --all')
             sys.exit(1)
-    
+
     return [os.path.join(settings.PYHOME_REPO, r) for r in repos]
 
 
@@ -162,8 +162,8 @@ def main():
         return sub
 
     # List existing repos
-    list_parser = add(list)
-   
+    add(list)
+
     # Clone a repo
     clone_parser = add(clone)
     clone_parser.add_argument('url',
@@ -189,7 +189,7 @@ def main():
     pull_parser.add_argument('--no-submodules',
                              action='store_false', dest='submodules',
                              help='do not update submodules')
-    
+
     # Set up symlinks
     link_parser = add(link)
     parser_add_repo_options(link_parser)
