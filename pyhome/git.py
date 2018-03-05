@@ -18,10 +18,10 @@ def git(*args):
     """
     Run a git command.
     """
-    
+
     # Construct command list
     cmd = ['git'] + list(args)
-    
+
     # Attempt command and handle errors
     try:
         output = check_output(cmd, stderr=STDOUT)
@@ -31,7 +31,7 @@ def git(*args):
         raise GitException(e.output.decode(SYSENC).strip())
     finally:
         pass
-    
+
     out = output.decode(SYSENC).strip()
     if len(out) > 0:
         print(out)
@@ -47,13 +47,23 @@ def reponame(url, name=None):
         name = name[:-4]
     return name
 
+def init(parent, name):
+    """
+    Initialise a git repo.
+    """
+
+    subcmd = ['init', name]
+
+    with dircontext(parent):
+        git(*subcmd)
+
 def clone(parent, url, name=None, submodules=True):
     """
     Clone a git repo.
     """
 
     subcmd = ['clone', url]
-    
+
     if name is not None:
         subcmd.append(name)
 

@@ -39,6 +39,19 @@ def list(args):
         print('    {}'.format(repo))
 
 
+def init(args):
+    """
+    Initialise a new repo in your pyhome
+    """
+
+    # Make sure repo dir exists
+    if not os.path.exists(settings.PYHOME_REPO):
+        os.makedirs(settings.PYHOME_REPO)
+
+    print('Initialising repo ...')
+    git.init(settings.PYHOME_REPO, args.name)
+
+
 def clone(args):
     """
     Clone a new repo to your pyhome
@@ -164,6 +177,11 @@ def main():
 
     # List existing repos
     add(list)
+
+    # Initialise a repo
+    init_parser = add(init)
+    init_parser.add_argument('name',
+                             help='name of the new repo')
 
     # Clone a repo
     clone_parser = add(clone)
