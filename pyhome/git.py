@@ -11,8 +11,10 @@ from pyhome.dircontext import dircontext
 # Determine system encoding from locale
 SYSENC = locale.getpreferredencoding()
 
+
 class GitException(Exception):
     pass
+
 
 def git(*args):
     """
@@ -36,6 +38,7 @@ def git(*args):
     if len(out) > 0:
         print(out)
 
+
 def reponame(url, name=None):
     """
     Determine a repo's cloned name from its URL.
@@ -47,6 +50,7 @@ def reponame(url, name=None):
         name = name[:-4]
     return name
 
+
 def init(parent, name):
     """
     Initialise a git repo.
@@ -56,6 +60,7 @@ def init(parent, name):
 
     with dircontext(parent):
         git(*subcmd)
+
 
 def clone(parent, url, name=None, submodules=True):
     """
@@ -73,6 +78,7 @@ def clone(parent, url, name=None, submodules=True):
         if submodules:
             with dircontext(reponame(url, name)):
                 git('submodule', 'update', '--init')
+
 
 def pull(repo, submodules=True):
     """

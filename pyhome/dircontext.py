@@ -6,6 +6,7 @@ changed working directory.
 import os
 from contextlib import contextmanager
 
+
 @contextmanager
 def dircontext(directory):
     """
